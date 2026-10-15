@@ -1,0 +1,54 @@
+name: Daily Predictions
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Run daily at 8 AM UTC
+  workflow_dispatch:
+
+jobs:
+  generate-predictions:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Generate predictions
+      env:
+        ODD-API-KEY: ${{ secrets.ODD_API_KEY }}
+      run: |
+        python -c "
+        from src.api_client import FootballAPI
+        from src.prediction_model import PredictionModel
+        from src.confidence_filter import ConfidenceFilter
+        import json
+        from datetime import datetime
+        
+        api = FootballAPI()
+        model = PredictionModel()
+        filter_engine = ConfidenceFilter()
+        
+        # Get predictions
+        predictions = []
+        # ... (same logic as app.py)
+        
+        # Save to JSON
+        with open(f'predictions_{datetime.now().strftime(\"%Y%m%d\")}.json', 'w') as f:
+            json.dump(predictions, f)
+        "
+    
+    - name: Commit results
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add predictions_*.json
+        git commit -m "Daily predictions $(date +%Y-%m-%d)" || exit 0
+        git push
