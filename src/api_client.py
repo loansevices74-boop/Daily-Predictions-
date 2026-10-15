@@ -1,49 +1,53 @@
 import requests
-from config import API_KEY, BASE_URL, LEAGUES
-from datetime import datetime, timedelta
+import time
+from datetime import datetime
 
 class FootballAPI:
-    def __init__(self):
-        self.headers = {
-            'x-apisports-key': API_KEY
-        }
+    def __init__(self, api_key, base_url):
+        self.headers = {'x-apisports-key': api_key}
+        self.base_url = base_url
+        self.last_request = 0
+    
+    def _rate_limit(self):
+        """API allows 10 requests/minute - be safe"""
+        elapsed = time.time() - self.last_request
+        if elapsed < 7:
+            time.sleep(7 - elapsed)
+        self.last_request = time.time()
     
     def get_daily_fixtures(self, date=None):
-        """Get all fixtures for today"""
         if date is None:
             date = datetime.now().strftime('%Y-%m-%d')
         
-        url = f"{BASE_URL}/fixtures"
-        params = {
-            'date': date,
-            'timezone': 'UTC'
-        }
-        
-        response = requests.get(url, headers=self.headers, params=params)
-        return response.json()['response']
+        self._rate_limit()
+        try:
+            url = f"{self.base_url}/fixtures"
+            params = {'date': date, 'timezone': 'UTC'}
+            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            data = response.json()
+            
+            if response.status_code != 200:
+                print(f"API Error: {data}")
+                return []
+            
+            return data.get('response', [])
+        except Exception as e:
+            print(f"Error fetching fixtures: {e}")
+            return []
     
     def get_odds(self, fixture_id):
-        """Get odds for specific fixture"""
-        url = f"{BASE_URL}/odds"
-        params = {
-            'fixture': fixture_id,
-            'bookmaker': 8  # Pinnacle
-        }
-        
-        response = requests.get(url, headers=self.headers, params=params)
-        return response.json()['response']
-    
-    def get_league_fixtures(self, league_id, date=None):
-        """Get fixtures for specific league"""
-        if date is None:
-            date = datetime.now().strftime('%Y-%m-%d')
-        
-        url = f"{BASE_URL}/fixtures"
-        params = {
-            'league': league_id,
-            'season': 2026,
-            'date': date
-        }
-        
-        response = requests.get(url, headers=self.headers, params=params)
-        return response.json()['response']
+        self._rate_limit()
+        try:
+            url = f"{self.base_url}/odds"
+            params = {'fixture': fixture_id}
+            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            data = response.json()
+            
+            if response.status_code != 200:
+                return None
+            
+            results = data.get('response', [])
+            return results[0] if results else None
+        except Exception as e:
+            print(f"Error fetching odds for {fixture_id}: {e}")
+            return None
