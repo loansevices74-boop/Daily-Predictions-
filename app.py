@@ -13,7 +13,7 @@ API_KEY = "547904d85d424ac91ad9a2071e98c79e"
 BASE_URL = "https://v3.football.api-sports.io"
 
 # Check if key is valid
-if not API_KEY or API_KEY == "PASTE_YOUR_KEY_HERE":
+if not API_KEY or API_KEY == "547904d85d424ac91ad9a2071e98c79e":
     st.error("⚠️ You forgot to paste your API key in the code! Open app.py and add it.")
     st.stop()
 
