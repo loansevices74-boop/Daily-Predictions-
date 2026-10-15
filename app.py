@@ -7,7 +7,7 @@ from datetime import datetime
 # ==========================================
 # PASTE YOUR ACTUAL API KEY INSIDE THE QUOTES BELOW
 # ==========================================
-API_KEY = "PASTE_YOUR_KEY_HERE" 
+API_KEY = "547904d85d424ac91ad9a2071e98c79e" 
 # ==========================================
 
 BASE_URL = "https://v3.football.api-sports.io"
